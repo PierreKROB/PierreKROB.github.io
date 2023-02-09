@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Informations sur l'entreprise</title>
+  </head>
+  <body>
+    <h1>Informations sur l'entreprise</h1>
+    <p id="company_info"></p>
+    <script>
+      function get_company_info(siret) {
+        var insee_api_url = "https://api.insee.fr/entreprises/sirene/V3/siret/" + siret + "?champs=uniteLegale";
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", insee_api_url, true);
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+            var company_info = JSON.parse(xhr.responseText);
+            document.getElementById("company_info").innerHTML = "Nom : " + company_info.uniteLegale.denominationUniteLegale + "<br>Adresse : " + company_info.uniteLegale.adresse1;
+          }
+        };
+        xhr.send();
+      }
+
+      var siret = "78865663500026";
+      get_company_info(siret);
+    </script>
+  </body>
+</html>
