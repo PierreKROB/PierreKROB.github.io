@@ -1,28 +1,40 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="UTF-8">
-    <title>Informations sur l'entreprise</title>
+    <title>Recherche d'entreprise par SIRET</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
   </head>
   <body>
-    <h1>Informations sur l'entreprise</h1>
-    <p id="company_info"></p>
-    <script>
-      function get_company_info(siret) {
-        var insee_api_url = "https://api.insee.fr/entreprises/sirene/V3/siret/" + siret + "?champs=uniteLegale";
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", insee_api_url, true);
-        xhr.onreadystatechange = function() {
-          if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-            var company_info = JSON.parse(xhr.responseText);
-            document.getElementById("company_info").innerHTML = "Nom : " + company_info.uniteLegale.denominationUniteLegale + "<br>Adresse : " + company_info.uniteLegale.adresse1;
-          }
-        };
-        xhr.send();
-      }
+    <h1>Recherche d'entreprise par SIRET</h1>
+    <form onsubmit="searchCompany(event)">
+      <label for="siret">Numéro de SIRET :</label>
+      <input type="text" id="siret" name="siret" required>
+      <button type="submit">Rechercher</button>
+    </form>
+    <div id="result"></div>
 
-      var siret = "78865663500026";
-      get_company_info(siret);
+    <script>
+      function searchCompany(event) {
+        event.preventDefault();
+        const siret = document.getElementById("siret").value;
+        fetch(`/search?siret=${siret}`)
+          .then(response => response.json())
+          .then(data => {
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = `
+              <h2>${data.nom}</h2>
+              <p><strong>SIRET :</strong> ${data.siret}</p>
+              <p><strong>Adresse :</strong> ${data.adresse}</p>
+              <p><strong>Code postal :</strong> ${data.code_postal}</p>
+              <p><strong>Ville :</strong> ${data.ville}</p>
+            `;
+          })
+          .catch(error => {
+            console.error(error);
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = `<p>Erreur lors de la recherche de l'entreprise.</p>`;
+          });
+      }
     </script>
   </body>
 </html>
