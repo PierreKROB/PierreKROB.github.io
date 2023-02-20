@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Recherche d'entreprise par SIRET</title>
+	<meta charset="UTF-8">
+</head>
+<body>
+	<h1>Recherche d'entreprise par SIRET</h1>
+
+	<label for="siret">Numéro de SIRET :</label>
+	<input type="text" id="siret" name="siret">
+	<button onclick="rechercher()">Rechercher</button>
+
+	<table id="resultats">
+		<thead>
+			<tr>
+				<th>Nom de l'entreprise</th>
+				<th>Date de création</th>
+				<th>Code NAF</th>
+			</tr>
+		</thead>
+		<tbody></tbody>
+	</table>
+
+	<script>
+		function rechercher() {
+			// Récupérer le numéro de SIRET entré par l'utilisateur
+			var siret = document.getElementById("siret").value;
+
+			// Effectuer la requête API en utilisant le numéro de SIRET
+			var url = "https://api.insee.fr/entreprises/sirene/V3/siret/" + siret;
+			var clientKey = "mqLofMRWvmppmMDg4osVfe0zP0Ea";
+			var clientSecret = "3Y83K0j0IiE22RgeoXlC9TPPzj0a";
+			var authUrl = "https://api.insee.fr/token";
+			var headers = {"Authorization": "Bearer "};
+			var xhr = new XMLHttpRequest();
+			xhr.open("POST", authUrl, true);
+			xhr.setRequestHeader("Authorization", "Basic " + btoa(clientKey + ":" + clientSecret));
+			xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+			xhr.onreadystatechange = function() {
+				if (this.readyState === XMLHttpRequest.DONE) {
+					if (this.status === 200) {
+						var response = JSON.parse(this.responseText);
+						var accessToken = response.access_token;
+						headers.Authorization += accessToken;
+						xhr.open("GET", url, true);
+						xhr.setRequestHeader("Authorization", headers.Authorization);
+						xhr.onreadystatechange = function() {
+							if (this.readyState === XMLHttpRequest.DONE) {
+								if (this.status === 200) {
+									var data = JSON.parse(this.responseText);
+									var nomEntreprise = data.uniteLegale.denomination;
+									var dateCreation = data.uniteLegale.dateCreation;
+									var codeNaf = data.uniteLegale.activitePrincipale.code;
+									var tableau = document.getElementById("resultats").getElementsByTagName("tbody")[0];
+									var ligne = tableau.insertRow(-1);
+									var celluleNom = ligne.insertCell(0);
+									var celluleDate = ligne.insertCell(1);
+									var celluleNaf = ligne.insertCell(2);
+									celluleNom.innerHTML = nomEntreprise;
+									celluleDate.innerHTML = dateCreation;
+									celluleNaf.innerHTML = codeNaf;
+								} else {
+									alert("Erreur HTTP : " + this.status + " " + this.responseText);
+								}
+							}
+						};
+						xhr.send();
+					} else {
+						alert("Erreur HTTP : " + this.status + " " + this.responseText);
+					}
+				}
+			};
+			xhr.send("grant_type=client_credentials");
+		}
+	</script>
+</body>
+</html>
